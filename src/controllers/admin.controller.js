@@ -1,5 +1,6 @@
 const Stock = require("../models/stock.model");
 const User = require("../models/user.model");
+const Sales = require("../models/sales.model");
 const Category = require("../models/category.model");
 const Supplier = require("../models/supplier.model");
 
@@ -184,7 +185,9 @@ async function addCategory(req, res) {
     } else {
       // Check if the category already exists before pushing
       if (
-        categoryDoc.categoryArray.some((list) => list.category.toLowerCase() === category.toLowerCase())
+        categoryDoc.categoryArray.some(
+          (list) => list.category.toLowerCase() === category.toLowerCase()
+        )
       ) {
         return res.status(400).json({ message: "Category already exists" });
       } else {
@@ -279,61 +282,60 @@ async function getCategory(req, res) {
   }
 }
 
-async function addSupplier(req, res){
-try {
-  const { supplier } = req.body;
-  const savedUser = await User.findById(req.user.userId); // userId is from JWT payload
-
-  if (!savedUser) {
-    return res.status(400).json({
-      message: "User not found",
-    });
-  }
-
-  if (savedUser.role != "admin") {
-    return res.status(400).json({
-      message: "Admin is only given the access to add Supplier",
-    });
-  }
-
-  // Find the first supplier document (assuming you have one main document for all suppliers)
-  let SupplierDoc = await Supplier.findOne();
-
-  if (!SupplierDoc) {
-    // If no supplier document exists, create a new one
-    SupplierDoc = new Supplier({ supplierArray: [{ supplier }] });
-  } else {
-    // Check if the supplier already exists before pushing
-    if (
-      SupplierDoc.supplierArray.some((list) => list.supplier.toLowerCase() === supplier.toLowerCase())
-    ) {
-      return res.status(400).json({ message: "Category already exists" });
-    } else {
-      SupplierDoc.supplierArray.push({ supplier });
-    }
-  }
-
-  // save to database
-  await SupplierDoc.save()
-
-  // respond
-  res.status(200).json({
-    message:"Supplier Created successfully",
-    suppliers:SupplierDoc.supplierArray,
-  })
-
-} catch (error) {
-  res.status(500).json({ message: "Server error", error });
-}
-}
-
-
-async function deleteSupplier(req, res){
-
+async function addSupplier(req, res) {
   try {
-    const {id} = req.params
+    const { supplier } = req.body;
     const savedUser = await User.findById(req.user.userId); // userId is from JWT payload
-    
+
+    if (!savedUser) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+
+    if (savedUser.role != "admin") {
+      return res.status(400).json({
+        message: "Admin is only given the access to add Supplier",
+      });
+    }
+
+    // Find the first supplier document (assuming you have one main document for all suppliers)
+    let SupplierDoc = await Supplier.findOne();
+
+    if (!SupplierDoc) {
+      // If no supplier document exists, create a new one
+      SupplierDoc = new Supplier({ supplierArray: [{ supplier }] });
+    } else {
+      // Check if the supplier already exists before pushing
+      if (
+        SupplierDoc.supplierArray.some(
+          (list) => list.supplier.toLowerCase() === supplier.toLowerCase()
+        )
+      ) {
+        return res.status(400).json({ message: "Category already exists" });
+      } else {
+        SupplierDoc.supplierArray.push({ supplier });
+      }
+    }
+
+    // save to database
+    await SupplierDoc.save();
+
+    // respond
+    res.status(200).json({
+      message: "Supplier Created successfully",
+      suppliers: SupplierDoc.supplierArray,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
+
+async function deleteSupplier(req, res) {
+  try {
+    const { id } = req.params;
+    const savedUser = await User.findById(req.user.userId); // userId is from JWT payload
+
     if (!savedUser) {
       return res.status(400).json({
         message: "User not found",
@@ -352,15 +354,14 @@ async function deleteSupplier(req, res){
     const matchIndex = supplierDoc.supplierArray.findIndex(
       (list) => list._id == id
     );
-    
+
     if (matchIndex === -1) {
       return res.status(400).json({
         message: "Supplier not found",
       });
     }
 
-    supplierDoc.supplierArray.splice(matchIndex, 1)
-    
+    supplierDoc.supplierArray.splice(matchIndex, 1);
 
     // save to database
     await supplierDoc.save();
@@ -369,42 +370,120 @@ async function deleteSupplier(req, res){
     res.status(200).json({
       message: "Supplier deleted successfully",
     });
-
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 }
 
-async function getSupplier(req, res){
-try {
-  const savedUser = await User.findById(req.user.userId)
+async function getSupplier(req, res) {
+  try {
+    const savedUser = await User.findById(req.user.userId);
 
-  if (!savedUser) {
-    return res.status(400).json({
-      message: "User not found",
+    if (!savedUser) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+
+    if (savedUser.role != "admin") {
+      return res.status(400).json({
+        message: "Admin is only given the access to get supplier",
+      });
+    }
+
+    // Find the first supplier document (assuming you have one main document for all suppliers)
+    const supplierDoc = await Supplier.findOne();
+
+    // respond
+    res.status(200).json({
+      message: "Access Granted",
+      suppliers: supplierDoc.supplierArray,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
-
-  if (savedUser.role != "admin") {
-    return res.status(400).json({
-      message: "Admin is only given the access to get supplier",
-    });
-  }
-
-  // Find the first supplier document (assuming you have one main document for all suppliers)
-  const supplierDoc = await Supplier.findOne();
-
-  // respond
-  res.status(200).json({
-    message:"Access Granted",
-    suppliers:supplierDoc.supplierArray
-  })
-} catch (error) {
-  res.status(500).json({ message: "Server error", error });
 }
 
-}  
+async function buyStocks(req, res) {
+  try {
+    const { id } = req.params;
+    const { qty } = req.body;
 
+    const savedUser = await User.findById(req.user.userId);
+    if (!savedUser) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+
+    if (!qty) {
+      return res.status(400).json({
+        message: "number of quantity is required",
+      });
+    }
+
+    const selectedUser = await Stock.findById(id);
+
+    if (qty > selectedUser.qty) {
+      return res.status(400).json({
+        message: `Quantity is not available, Only ${selectedUser.qty} stock${
+          selectedUser.qty > 1 ? "s" : ""
+        } ${selectedUser.qty > 1 ? "are" : "is"} available`,
+      });
+    }
+    // console.log("selectedUser", selectedUser)
+
+    //create new Sales
+    const soldStock = new Sales({
+      itemName: selectedUser.itemName,
+      stockId: id,
+      category: selectedUser.category,
+      qty: qty > selectedUser.qty ? 0 : qty,
+      price: qty * selectedUser.price,
+      supplier: selectedUser.supplier,
+      sold: true,
+    });
+
+    const savedStock = await soldStock.save();
+    console.log("savedStock", savedStock);
+
+    // respond
+    res.status(200).json({
+      message: "Stock Sold Successfully",
+      stock: savedStock,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
+
+async function soldStocks(req, res) {
+  try {
+    const savedUser = await User.findById(req.user.userId);
+
+    if (!savedUser) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+
+    if (savedUser.role != "admin") {
+      return res.status(400).json({
+        message: "Admin is only given the access to get sold stocks",
+      });
+    }
+
+    // get all sold stocks
+    const soldStocks = await Sales.find();
+
+    res.status(200).json({
+      message: "Access Granted",
+      stocks: soldStocks,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" }, error);
+  }
+}
 
 module.exports = {
   addStock,
@@ -415,6 +494,7 @@ module.exports = {
   getCategory,
   addSupplier,
   deleteSupplier,
-  getSupplier
-
+  getSupplier,
+  buyStocks,
+  soldStocks,
 };

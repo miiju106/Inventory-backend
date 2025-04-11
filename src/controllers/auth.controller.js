@@ -39,8 +39,20 @@ async function loginUser(req, res) {
       expiresIn: "2hr",
     });
 
+   
+
     // Respond with JWT
-    res.json({ message: "User Logged in successfully", accessToken });
+    res.json({
+      message: "User Logged in successfully",
+      accessToken,
+      user: {
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+      },
+    });
   } catch (error) {
     res.status(500).json({
       message: "Server Error",
@@ -52,7 +64,6 @@ async function verifyEmailJWT(req, res) {
   try {
     const { token } = req.params;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
- 
 
     const savedUser = await User.findOne({ email: decoded.email });
     if (!savedUser) {
@@ -75,7 +86,7 @@ async function verifyEmailJWT(req, res) {
   } catch (error) {
     res.status(500).json({
       message: "Server Error",
-      error
+      error,
     });
   }
 }

@@ -1,5 +1,5 @@
 const express = require("express")
-const {addStock, updateStock, deleteStock, addCategory, deleteCategory, getCategory, addSupplier, deleteSupplier, getSupplier} = require("../controllers/admin.controller")
+const {addStock, updateStock, deleteStock, addCategory, deleteCategory, getCategory, addSupplier, deleteSupplier, getSupplier, buyStocks, soldStocks} = require("../controllers/admin.controller")
 const verifyJWT = require("../middlewares/verifyJWT")
 const adminRouter = express.Router()
 
@@ -12,6 +12,8 @@ adminRouter.get("/get-category", verifyJWT, getCategory)
 adminRouter.post("/add-supplier", verifyJWT, addSupplier)
 adminRouter.delete("/delete-supplier/:id", verifyJWT, deleteSupplier)
 adminRouter.get("/get-supplier", verifyJWT, getSupplier)
+adminRouter.post("/buy-stock/:id", verifyJWT, buyStocks)
+adminRouter.get("/get-sold-stock", verifyJWT, soldStocks)
 
 
 module.exports = adminRouter
